@@ -11,8 +11,8 @@ Route.group(() => {
   Route.get('users/','UserController.index')
   Route.get('users/conversation/','UserController.conversation')
 
+  Route.get('conversations/:id','ConversationController.show')
   Route.get('conversations/chat/:id','ConversationController.chats')
-
   Route.post('conversations/','ConversationController.store')
   Route.delete('conversations/:id','ConversationController.destroy')
 

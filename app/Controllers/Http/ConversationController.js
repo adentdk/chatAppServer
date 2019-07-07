@@ -8,8 +8,8 @@ class ConversationController {
     try {
 
       const getUser = await auth.getUser();
-      const {type,partner} = request.only(['type','partner'])
-      const conversationData = {type,partner,user_id : getUser.id}
+      const {type,partner_id} = request.only(['type','partner_id'])
+      const conversationData = {type,partner_id,user_id : getUser.id}
       const conversation = await Conversation.create(conversationData)
       response.send(conversation);
 
@@ -38,6 +38,25 @@ class ConversationController {
     }
   }
 
+  async show ({params,response,auth}) {
+    try {
+      const user = await auth.getUser()
+
+      const detail_conversation = await Conversation.query()
+                                          .with('partner')
+                                          .with('group.users', builder => {
+                                            builder.select('id','name')
+                                          })
+                                          .where('conversations.id',params.id)
+                                          .fetch()
+      response.send(detail_conversation)
+    }catch(e){
+      response.status(400).send({
+        "message" : "error"
+      })
+      console.log(e)
+    }
+  }
 
 
   async chats ({ params, request, response, auth }) {
@@ -49,16 +68,19 @@ class ConversationController {
       const detail_conversation = await Conversation.query()
                             .select('conversations.id', 'conversations.type',
                                     'conversations.created_at as timestamp',
-                                    'conversations.partner as partner_id','users.name as partner',
-                                    'conversations.group_id','groups.name as group')
-                            .leftJoin('users','users.id','conversations.partner')
-                            .leftJoin('groups','groups.id','conversations.group_id')
+                                    'conversations.partner_id','users.name as partner',
+                                    'conversations.group_id')
+                            .leftJoin('users','users.id','conversations.partner_id')
+                            .with('group',builder => {
+                            	builder.select('id','name')
+                            })
                             .where('conversations.id',params.id).fetch()
 
       const chats = await conversation.chat()
                         .select('chats.id','chats.user_id','chats.message','chats.is_read',
                                 'chats.created_at as timestamp','users.name as sender')
                         .innerJoin('users','users.id','chats.user_id')
+                        .orderBy('id','asc')
                         .fetch()
 
       response.send({

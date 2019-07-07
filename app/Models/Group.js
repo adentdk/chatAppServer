@@ -8,6 +8,9 @@ class Group extends Model {
         return this.belongsToMany('App/Models/User')
                     .pivotModel('App/Models/GroupMember')
     }
+    conversation() {
+    	return this.hasOne('App/Models/Conversation')
+    }
 }
 
 module.exports = Group

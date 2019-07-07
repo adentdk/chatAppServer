@@ -33,19 +33,30 @@ class UserController {
       const getUser = await auth.getUser()
 
       const user = await User.find(getUser.id)
-      const conversation = await user.conversations()
+      const personal = await user.conversations()
                             .select('conversations.id', 'conversations.type',
                                     'conversations.created_at as timestamp',
-                                    'users.name as partner','groups.name as group')
-                            .leftJoin('users','users.id','conversations.partner')
-                            .leftJoin('groups','groups.id','conversations.group_id')
+                                    'users.name as partner')
+                            .leftJoin('users','users.id','conversations.partner_id')
                             .orderBy('id','desc')
                             .with('chat', builder => {
                                     builder.orderBy('id','desc')
                             }).fetch()
+
+      const group = await user.group()
+                          .select('id','name','avatar')
+                          .with('conversation', builder => {
+                            builder.with('chat', builder => {
+                              builder.orderBy('id','desc')
+                            })
+                          })
+                          .fetch()
      
   
-      response.send(conversation);
+      response.send({
+        "personal" : personal,
+        "group" : group
+      });
     }
     catch(err) {
       response.status(400).send(
@@ -56,6 +67,7 @@ class UserController {
       console.log(err)
     }
   }
+
 }
 
 module.exports = UserController

@@ -38,7 +38,8 @@ class User extends Model {
     return this.hasMany('App/Models/Conversation')
   }
   group() {
-    return this.belongsToMany('App/models/Group')
+    return this.belongsToMany('App/Models/Group')
+                    .pivotModel('App/Models/GroupMember')
   }
 }
 
